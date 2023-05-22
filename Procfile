@@ -1,1 +1,0 @@
-web: gunicorn GrievanceManagementBackend.wsgi--log-file -

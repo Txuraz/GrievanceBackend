@@ -13,7 +13,7 @@ from .serializers import UserSerializers
 class Register(APIView):
     def post(self, request):
         serializer = UserSerializers(data=request.data)
-        serializer.is_valid(raise_exception=False)
+        serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
 
@@ -74,7 +74,7 @@ class Logout(APIView):
         response = Response()
         response.delete_cookie('jwt')
         response.data = {
-            'message' : 'Success'
+            'message': 'Success'
         }
         return response
 
