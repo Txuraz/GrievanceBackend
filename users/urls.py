@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path
-from .views import Register, Login, UserView, Logout, AdminView, ApproveUser, UserApprovalRequests
+from .views import Register, Login, UserView, Logout, AdminView, ApproveUser, UserApprovalRequests, DeleteUser, \
+    PromoteDemoteUser, TotalUsers
 
 urlpatterns = [
     path('register', Register.as_view()),
@@ -10,4 +11,7 @@ urlpatterns = [
     path('admin/', AdminView.as_view(), name='admin'),
     path('approval-requests/', UserApprovalRequests.as_view(), name='approval-requests'),
     path('approve-user/', ApproveUser.as_view(), name='approve-user'),
+    path('user/delete/<int:user_id>/', DeleteUser.as_view(), name='delete-user'),
+    path('user/<int:user_id>/promote-demote/', PromoteDemoteUser.as_view(), name='promote-demote-user'),
+    path('total-user/', TotalUsers.as_view(), name='approved_users_and_admins'),
 ]
