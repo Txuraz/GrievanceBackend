@@ -32,7 +32,7 @@ class CreateArticle(APIView):
 
 class ListArticles(APIView):
     def get(self, request):
-        articles = Article.objects.order_by('upvotes')
+        articles = Article.objects.order_by('vote')
         serializer = ArticleSerializer(articles, many=True)
         return Response(serializer.data)
 
@@ -43,6 +43,8 @@ class RetrieveArticle(APIView):
         serializer = ArticleSerializer(article)
         return Response(serializer.data)
 
+
+from django.http import HttpResponse
 
 class DeleteArticle(APIView):
     def delete(self, request, article_id):
@@ -63,7 +65,8 @@ class DeleteArticle(APIView):
 
         article.delete()
 
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({"Article deleted successfully."})
+
 
 
 class VoteArticle(APIView):
@@ -86,12 +89,13 @@ class VoteArticle(APIView):
         vote_type = request.data.get('vote_type')
 
         if vote_type == 'upvote':
-            article.upvotes += 1
+            article.vote += 1
         elif vote_type == 'downvote':
-            article.downvotes += 1
+            article.vote -= 1
         else:
             return Response({'error': 'Invalid vote_type'}, status=status.HTTP_400_BAD_REQUEST)
 
         article.save()
 
         return Response(status=status.HTTP_200_OK)
+

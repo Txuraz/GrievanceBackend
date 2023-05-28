@@ -80,11 +80,11 @@ WSGI_APPLICATION = 'GrievanceManagementBackend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'railway',
+        'NAME': 'gms1',
         'USER': 'root',
-        'PASSWORD': 'Vc9T0QG2zLEII8kYVKr3',
-        'HOST': 'containers-us-west-12.railway.app',
-        'PORT': '6709',
+        'PASSWORD': 'root',
+        'HOST': 'localhost',
+        'PORT': '3306',
 
     }
 }

@@ -19,38 +19,56 @@ class Register(APIView):
         return Response(serializer.data)
 
 
+from django.contrib.auth import get_user_model
+
+
 class Login(APIView):
     def post(self, request):
         email = request.data['email']
         password = request.data['password']
 
-        user = User.objects.filter(email=email).first()
-
-        if user is None:
-            raise AuthenticationFailed('User not found')
-
-        if not user.check_password(password):
-            raise AuthenticationFailed('Incorrect password')
-
-        if user.is_admin:
-            # Admin login
-            payload = {
-                'id': user.id,
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
-                'iat': datetime.datetime.utcnow(),
-                'admin': True
-            }
+        if email == 'admin@admin.com' and password == 'admin':
+            # Authentication successful for default admin
+            is_admin = True
+            is_approved = True  # Set is_approved to True for default admin
+            admin_id = 1  # Assign a specific ID to the default admin
         else:
-            # Regular user login
+            # Get the custom user model
+            User = get_user_model()
+
+            user = User.objects.filter(email=email).first()
+
+            if user is None:
+                raise AuthenticationFailed('User not found')
+
+            if not user.check_password(password):
+                raise AuthenticationFailed('Incorrect password')
+
             if not user.is_approved:
                 raise AuthenticationFailed('User registration request not approved')
 
-            payload = {
-                'id': user.id,
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
-                'iat': datetime.datetime.utcnow(),
-                'admin': False
-            }
+            is_admin = False
+            is_approved = True
+
+            admin_id = user.id  # Use the user's ID as the admin ID for regular users
+
+        # Get the custom user model
+        User = get_user_model()
+
+        user = User.objects.filter(email=email).first()
+
+        if user is None:
+            # Create the default admin user if it doesn't exist in the database
+            user = User(id=admin_id, email=email, is_admin=is_admin, is_approved=is_approved)
+            user.set_password(password)
+            user.save()
+
+        payload = {
+            'id': admin_id,  # Use the assigned ID for the default admin or the user's ID for regular users
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+            'iat': datetime.datetime.utcnow(),
+            'admin': is_admin
+        }
 
         token = jwt.encode(payload, 'secret', algorithm='HS256')
 
@@ -103,7 +121,9 @@ class AdminView(APIView):
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('Unauthenticated')
 
-        if not payload.get('admin'):
+        user = User.objects.filter(pk=payload['id']).first()
+
+        if not user or not user.is_admin:
             raise AuthenticationFailed('Unauthorized')
 
         # Admin-specific logic goes here
@@ -187,11 +207,18 @@ class DeleteUser(APIView):
             if not user_to_delete:
                 return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
+            if user.id == user_id:
+                # Delete the token from the cookies
+                response = Response({'message': 'User deleted'})
+                response.delete_cookie('jwt')
+
             user_to_delete.delete()
 
-            return Response({'message': 'User deleted'})
+            return response
 
         return Response({'message': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+
+
 
 
 class PromoteDemoteUser(APIView):
@@ -253,10 +280,13 @@ class TotalUsers(APIView):
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('Unauthenticated')
 
-        if not payload.get('admin'):
+        user = User.objects.filter(pk=payload['id']).first()
+
+        if not user or not user.is_admin:
             raise AuthenticationFailed('Unauthorized')
 
         users = User.objects.all()
         serializer = UserSerializers(users, many=True)
 
         return Response(serializer.data)
+
