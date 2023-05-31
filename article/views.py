@@ -30,11 +30,41 @@ class CreateArticle(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+'''Algorithm to SORT List of Articles according to greater number of vote'''
+
+
 class ListArticles(APIView):
     def get(self, request):
-        articles = Article.objects.order_by('vote')
-        serializer = ArticleSerializer(articles, many=True)
+        articles = Article.objects.all()
+        sorted_articles = self.merge_sort(articles)
+        serializer = ArticleSerializer(sorted_articles, many=True)
         return Response(serializer.data)
+
+    def merge_sort(self, articles):
+        if len(articles) <= 1:
+            return articles
+
+        mid = len(articles) // 2
+        left = self.merge_sort(articles[:mid])
+        right = self.merge_sort(articles[mid:])
+
+        return self.merge(left, right)
+
+    def merge(self, left, right):
+        result = []
+        i = j = 0
+
+        while i < len(left) and j < len(right):
+            if left[i].vote > right[j].vote:
+                result.append(left[i])
+                i += 1
+            else:
+                result.append(right[j])
+                j += 1
+
+        result.extend(left[i:])
+        result.extend(right[j:])
+        return result
 
 
 class RetrieveArticle(APIView):
@@ -45,6 +75,7 @@ class RetrieveArticle(APIView):
 
 
 from django.http import HttpResponse
+
 
 class DeleteArticle(APIView):
     def delete(self, request, article_id):
@@ -66,7 +97,6 @@ class DeleteArticle(APIView):
         article.delete()
 
         return Response({"Article deleted successfully."})
-
 
 
 class VoteArticle(APIView):
@@ -98,4 +128,3 @@ class VoteArticle(APIView):
         article.save()
 
         return Response(status=status.HTTP_200_OK)
-
