@@ -11,6 +11,7 @@ from django.contrib.auth import get_user_model
 
 from .models import Article
 from .serializers import ArticleSerializer, ArticleStatusUpdateSerializer
+from users.models import User
 
 
 class CreateArticle(APIView):
@@ -138,13 +139,19 @@ class DeleteArticle(APIView):
             raise AuthenticationFailed('Unauthenticated!')
 
         try:
-            article = Article.objects.get(pk=article_id, author_id=payload['id'])
+            article = Article.objects.get(pk=article_id)
         except Article.DoesNotExist:
             raise Http404
 
+        user_id = payload.get('id')
+        user = User.objects.get(pk=user_id)
+
+        if user != article.author and not user.is_admin:
+            raise PermissionDenied('You do not have permission to delete this article.')
+
         article.delete()
 
-        return Response({"Article deleted successfully."})
+        return Response({"message": "Article deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
 
 class VoteArticle(APIView):
