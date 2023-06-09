@@ -25,9 +25,12 @@ class CreateArticle(APIView):
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('Unauthenticated!')
 
+        author_id = payload['id']
+        author_name = get_user_model().objects.get(id=author_id).name
+
         serializer = ArticleSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(author_id=payload['id'])
+        serializer.save(author_id=author_id, author_name=author_name)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 

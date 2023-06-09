@@ -1,0 +1,3 @@
+2023-jun-9      -voted_by field updated to upvoted_by and downvoted_by
+                -is_completed field is added and if is_completed field is True, article is filtered out in http://127.0.0.1:8000/api/articles/completed-articles/
+                -author_name field is added in article

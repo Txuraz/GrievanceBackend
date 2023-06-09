@@ -8,6 +8,7 @@ class ArticleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Article
         fields = '__all__'
+        read_only_fields = ('id', 'author', 'created_at', 'vote', 'upvoted_by', 'downvoted_by', 'is_completed')
 
 
 class ArticleStatusUpdateSerializer(serializers.Serializer):
