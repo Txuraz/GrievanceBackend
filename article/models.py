@@ -10,4 +10,6 @@ class Article(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     vote = models.IntegerField(default=0)
-    voted_by = models.ManyToManyField(get_user_model(), blank=True, related_name='voted_articles')
+    upvoted_by = models.ManyToManyField(get_user_model(), related_name='upvoted_articles')
+    downvoted_by = models.ManyToManyField(get_user_model(), related_name='downvoted_articles')
+    is_completed = models.BooleanField(default=False)

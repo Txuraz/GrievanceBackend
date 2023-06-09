@@ -1,6 +1,6 @@
 import jwt
 from rest_framework import status
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,7 +10,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from django.contrib.auth import get_user_model
 
 from .models import Article
-from .serializers import ArticleSerializer
+from .serializers import ArticleSerializer, ArticleStatusUpdateSerializer
 
 
 class CreateArticle(APIView):
@@ -34,9 +34,18 @@ class CreateArticle(APIView):
 
 class ListArticles(APIView):
     def get(self, request):
-        articles = Article.objects.all()
-        sorted_articles = self.merge_sort(articles)
-        serializer = ArticleSerializer(sorted_articles, many=True)
+        all_articles = Article.objects.all()
+        pending_articles = []
+        completed_articles = []
+
+        for article in all_articles:
+            if article.is_completed:
+                completed_articles.append(article)
+            else:
+                pending_articles.append(article)
+
+        sorted_pending_articles = self.merge_sort(pending_articles)
+        serializer = ArticleSerializer(sorted_pending_articles, many=True)
         return Response(serializer.data)
 
     def merge_sort(self, articles):
@@ -154,19 +163,59 @@ class VoteArticle(APIView):
 
         vote_type = request.data.get('vote_type')
 
-        if vote_type == 'upvote':
-            article.vote += 1
-        elif vote_type == 'downvote':
-            article.vote -= 1
-        else:
-            return Response({'error': 'Invalid vote_type'}, status=status.HTTP_400_BAD_REQUEST)
-
         # Store user information
         user_id = payload['id']
         user = get_user_model().objects.get(pk=user_id)
-        article.voted_by.add(user)
+
+        if vote_type == 'upvote':
+            article.vote += 1
+            article.upvoted_by.add(user)
+        elif vote_type == 'downvote':
+            article.vote -= 1
+            article.downvoted_by.add(user)
+        else:
+            return Response({'error': 'Invalid vote_type'}, status=status.HTTP_400_BAD_REQUEST)
 
         article.save()
 
         return Response(status=status.HTTP_200_OK)
+
+
+class ArticleStatusUpdate(APIView):
+    def patch(self, request, article_id):
+        token = request.COOKIES.get('jwt')
+
+        if not token:
+            raise AuthenticationFailed()
+
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed()
+
+        user = get_user_model().objects.filter(pk=payload['id']).first()
+
+        if not user or not user.is_admin:
+            raise PermissionDenied()
+
+        try:
+            article = Article.objects.get(pk=article_id)
+        except Article.DoesNotExist:
+            raise Http404
+
+        serializer = ArticleStatusUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        is_completed = serializer.validated_data['is_completed']
+        article.is_completed = is_completed
+        article.save()
+
+        return Response({'is_completed': is_completed}, status=status.HTTP_200_OK)
+
+
+class CompletedArticleList(APIView):
+    def get(self, request):
+        completed_articles = Article.objects.filter(is_completed=True)
+        serializer = ArticleSerializer(completed_articles, many=True)
+        return Response(serializer.data)
 

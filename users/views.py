@@ -217,8 +217,6 @@ class DeleteUser(APIView):
         return Response({'message': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
 
 
-
-
 class PromoteDemoteUser(APIView):
     def post(self, request, user_id):
         token = request.COOKIES.get('jwt')
