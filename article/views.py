@@ -119,11 +119,11 @@ class SimilarArticles(APIView):
         similarities = [article_doc.similarity(doc) for doc in all_docs]
 
         # Get the indices of top similar articles
-        similar_indices = sorted(range(len(similarities)), key=lambda i: similarities[i], reverse=True)[:num_suggestions]
+        similar_indices = sorted(range(len(similarities)), key=lambda i: similarities[i], reverse=True)[
+                          :num_suggestions]
 
         similar_articles = [all_articles[index] for index in similar_indices]
         return similar_articles
-
 
 
 class DeleteArticle(APIView):
@@ -178,11 +178,17 @@ class VoteArticle(APIView):
         user = get_user_model().objects.get(pk=user_id)
 
         if vote_type == 'upvote':
-            article.vote += 1
+            # Remove user from downvoted_by
+            article.downvoted_by.remove(user)
+            # Add user to upvoted_by
             article.upvoted_by.add(user)
+            article.vote = article.upvoted_by.count() - article.downvoted_by.count()
         elif vote_type == 'downvote':
-            article.vote -= 1
+            # Remove user from upvoted_by
+            article.upvoted_by.remove(user)
+            # Add user to downvoted_by
             article.downvoted_by.add(user)
+            article.vote = article.upvoted_by.count() - article.downvoted_by.count()
         else:
             return Response({'error': 'Invalid vote_type'}, status=status.HTTP_400_BAD_REQUEST)
 
