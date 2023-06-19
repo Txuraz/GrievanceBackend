@@ -2,3 +2,7 @@
                 -is_completed field is added and if is_completed field is True, article is filtered out in http://127.0.0.1:8000/api/articles/completed-articles/
                 -author_name field is added in article
                 -Delete API is updated
+
+2023-June-19    -Forgot Password Api is created(no-reply.gms@outlook.com is created with password )
+                -spaCy NLP is used
+

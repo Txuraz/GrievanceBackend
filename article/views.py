@@ -12,6 +12,9 @@ from django.contrib.auth import get_user_model
 from .models import Article
 from .serializers import ArticleSerializer, ArticleStatusUpdateSerializer
 from users.models import User
+import spacy
+
+nlp = spacy.load('en_core_web_sm')
 
 
 class CreateArticle(APIView):
@@ -101,29 +104,26 @@ class SimilarArticles(APIView):
         article = get_object_or_404(Article, pk=article_id)
         return article
 
-    def get_similar_articles(self, article, num_suggestions=5):
+    def get_similar_articles(self, article, num_suggestions=4):
         all_articles = Article.objects.exclude(id=article.id)
 
         # Combine the titles and contents of all articles
         all_text = [art.title + " " + art.content for art in all_articles]
 
-        # Create a count vectorizer and transform the text data
-        vectorizer = CountVectorizer()
-        vectorized_data = vectorizer.fit_transform(all_text)
-
-        # Transform the input article's text
+        # Use spaCy for tokenization and similarity calculation
         article_text = article.title + " " + article.content
-        article_vector = vectorizer.transform([article_text])
+        article_doc = nlp(article_text)
+        all_docs = [nlp(text) for text in all_text]
 
-        # Calculate cosine similarity between the article vector and all vectors
-        similarities = cosine_similarity(article_vector, vectorized_data)
+        # Calculate similarity scores using spaCy's similarity method
+        similarities = [article_doc.similarity(doc) for doc in all_docs]
 
         # Get the indices of top similar articles
-        similar_indices = similarities.argsort()[0][::-1][:num_suggestions]
-        similar_indices = similar_indices.tolist()  # Convert to a regular Python list
+        similar_indices = sorted(range(len(similarities)), key=lambda i: similarities[i], reverse=True)[:num_suggestions]
 
         similar_articles = [all_articles[index] for index in similar_indices]
         return similar_articles
+
 
 
 class DeleteArticle(APIView):
@@ -228,4 +228,3 @@ class CompletedArticleList(APIView):
         completed_articles = Article.objects.filter(is_completed=True)
         serializer = ArticleSerializer(completed_articles, many=True)
         return Response(serializer.data)
-

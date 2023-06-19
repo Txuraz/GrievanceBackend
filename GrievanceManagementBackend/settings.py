@@ -134,6 +134,15 @@ CORS_ALLOW_CREDENTIALS = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp-mail.outlook.com'
+EMAIL_HOST_USER = "no-reply.gms@outlook.com"
+EMAIL_HOST_PASSWORD = "Grievancemgmt123"
+MAIL_FROM_ADDRESS = "no-reply.gms@outlook.com"
+
+
 
 
 
