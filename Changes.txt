@@ -3,6 +3,7 @@
                 -author_name field is added in article
                 -Delete API is updated
 
-2023-June-19    -Forgot Password Api is created(no-reply.gms@outlook.com is created with password )
+2023-June-19    -Forgot Password Api is created(no-reply.gms@outlook.com is created with password Grievancemgmt123 )
                 -spaCy NLP is used
+
 
