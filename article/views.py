@@ -182,13 +182,13 @@ class VoteArticle(APIView):
             article.downvoted_by.remove(user)
             # Add user to upvoted_by
             article.upvoted_by.add(user)
-            article.vote = article.upvoted_by.count() - article.downvoted_by.count()
+            article.vote += 1
         elif vote_type == 'downvote':
             # Remove user from upvoted_by
             article.upvoted_by.remove(user)
             # Add user to downvoted_by
             article.downvoted_by.add(user)
-            article.vote = article.upvoted_by.count() - article.downvoted_by.count()
+            article.vote -= 1
         else:
             return Response({'error': 'Invalid vote_type'}, status=status.HTTP_400_BAD_REQUEST)
 
