@@ -92,6 +92,10 @@ class RetrieveArticle(APIView):
         article = get_object_or_404(Article, pk=article_id)
         return article
 
+import gensim
+import spacy
+from gensim.models import Word2Vec
+from spacy.lang.en import English
 
 class SimilarArticles(APIView):
     def get(self, request, article_id):
@@ -110,20 +114,27 @@ class SimilarArticles(APIView):
         # Combine the titles and contents of all articles
         all_text = [art.title + " " + art.content for art in all_articles]
 
-        # Use spaCy for tokenization and similarity calculation
-        article_text = article.title + " " + article.content
-        article_doc = nlp(article_text)
-        all_docs = [nlp(text) for text in all_text]
+        # Load spaCy's English model for tokenization
+        nlp = spacy.load('en_core_web_sm')
 
-        # Calculate similarity scores using spaCy's similarity method
-        similarities = [article_doc.similarity(doc) for doc in all_docs]
+        # Tokenize and preprocess the text
+        all_docs = [nlp(text) for text in all_text]
+        article_doc = nlp(article.title + " " + article.content)
+
+        # Train a Word2Vec model on the preprocessed documents
+        sentences = [[token.text for token in doc] for doc in all_docs]
+        model = Word2Vec(sentences, min_count=1, vector_size=300)
+
+        # Calculate similarity scores using Gensim's Word2Vec model
+        similarities = [model.wv.n_similarity(article_doc, doc) for doc in all_docs]
 
         # Get the indices of top similar articles
-        similar_indices = sorted(range(len(similarities)), key=lambda i: similarities[i], reverse=True)[
-                          :num_suggestions]
+        similar_indices = sorted(range(len(similarities)), key=lambda i: similarities[i], reverse=True)[:num_suggestions]
 
         similar_articles = [all_articles[index] for index in similar_indices]
         return similar_articles
+
+
 
 
 class DeleteArticle(APIView):

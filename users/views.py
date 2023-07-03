@@ -214,9 +214,10 @@ class DeleteUser(APIView):
             if not user_to_delete:
                 return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
+            response = Response({'message': 'User deleted'})  # Initialize response here
+
             if user.id == user_id:
                 # Delete the token from the cookies
-                response = Response({'message': 'User deleted'})
                 response.delete_cookie('jwt')
 
             user_to_delete.delete()
