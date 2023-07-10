@@ -38,7 +38,7 @@ class CreateArticle(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class ListArticles(APIView):
+class IncompleteArticles(APIView):
     def get(self, request):
         all_articles = Article.objects.all()
         pending_articles = []
@@ -241,4 +241,11 @@ class CompletedArticleList(APIView):
     def get(self, request):
         completed_articles = Article.objects.filter(is_completed=True)
         serializer = ArticleSerializer(completed_articles, many=True)
+        return Response(serializer.data)
+
+
+class ListArticles(APIView):
+    def get(self, request):
+        all_articles = Article.objects.all()
+        serializer = ArticleSerializer(all_articles, many=True)
         return Response(serializer.data)
