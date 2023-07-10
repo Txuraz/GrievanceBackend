@@ -7,3 +7,6 @@
                 -spaCy NLP is used
 
 
+2023-July-10    -List All article Api created
+                -Incomplete Article Created
+                -Upvote and Downvote Api updated (If user upvote same article twice it will undo to initial state and similar to downvote API)

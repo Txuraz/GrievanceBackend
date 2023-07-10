@@ -181,22 +181,25 @@ class VoteArticle(APIView):
 
         vote_type = request.data.get('vote_type')
 
-        # Store user information
         user_id = payload['id']
         user = get_user_model().objects.get(pk=user_id)
 
         if vote_type == 'upvote':
-            # Remove user from downvoted_by
-            article.downvoted_by.remove(user)
-            # Add user to upvoted_by
-            article.upvoted_by.add(user)
-            article.vote += 1
+            if article.upvoted_by.filter(id=user_id).exists():
+                article.upvoted_by.remove(user)
+                article.vote -= 1
+            else:
+                article.downvoted_by.remove(user)
+                article.upvoted_by.add(user)
+                article.vote += 1
         elif vote_type == 'downvote':
-            # Remove user from upvoted_by
-            article.upvoted_by.remove(user)
-            # Add user to downvoted_by
-            article.downvoted_by.add(user)
-            article.vote -= 1
+            if article.downvoted_by.filter(id=user_id).exists():
+                article.downvoted_by.remove(user)
+                article.vote += 1
+            else:
+                article.upvoted_by.remove(user)
+                article.downvoted_by.add(user)
+                article.vote -= 1
         else:
             return Response({'error': 'Invalid vote_type'}, status=status.HTTP_400_BAD_REQUEST)
 
