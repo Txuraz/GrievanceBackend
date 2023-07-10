@@ -14,3 +14,4 @@ class Article(models.Model):
     upvoted_by = models.ManyToManyField(get_user_model(), related_name='upvoted_articles')
     downvoted_by = models.ManyToManyField(get_user_model(), related_name='downvoted_articles')
     is_completed = models.BooleanField(default=False)
+    stay_anonymous = models.BooleanField(default=False)

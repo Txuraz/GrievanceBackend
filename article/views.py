@@ -5,10 +5,8 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.feature_extraction.text import CountVectorizer
 from django.contrib.auth import get_user_model
-
+from gensim.models import Word2Vec
 from .models import Article
 from .serializers import ArticleSerializer, ArticleStatusUpdateSerializer
 from users.models import User
@@ -31,10 +29,11 @@ class CreateArticle(APIView):
 
         author_id = payload['id']
         author_name = get_user_model().objects.get(id=author_id).name
+        stay_anonymous = request.data.get('stay_anonymous')
 
         serializer = ArticleSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(author_id=author_id, author_name=author_name)
+        serializer.save(author_id=author_id, author_name=author_name, stay_anonymous=stay_anonymous)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -92,10 +91,6 @@ class RetrieveArticle(APIView):
         article = get_object_or_404(Article, pk=article_id)
         return article
 
-import gensim
-import spacy
-from gensim.models import Word2Vec
-from spacy.lang.en import English
 
 class SimilarArticles(APIView):
     def get(self, request, article_id):
@@ -112,29 +107,31 @@ class SimilarArticles(APIView):
         all_articles = Article.objects.exclude(id=article.id)
 
         # Combine the titles and contents of all articles
-        all_text = [art.title + " " + art.content for art in all_articles]
+        all_text = [art.content for art in all_articles]
 
         # Load spaCy's English model for tokenization
         nlp = spacy.load('en_core_web_sm')
 
         # Tokenize and preprocess the text
         all_docs = [nlp(text) for text in all_text]
-        article_doc = nlp(article.title + " " + article.content)
+        article_doc = nlp(article.content)
 
         # Train a Word2Vec model on the preprocessed documents
         sentences = [[token.text for token in doc] for doc in all_docs]
         model = Word2Vec(sentences, min_count=1, vector_size=300)
 
         # Calculate similarity scores using Gensim's Word2Vec model
-        similarities = [model.wv.n_similarity(article_doc, doc) for doc in all_docs]
+        # similarities = [model.wv.n_similarity(article_doc, doc) for doc in sentences]
+
+        # Calculate similarity scores using spaCy's similarity method
+        similarities = [article_doc.similarity(doc) for doc in all_docs]
 
         # Get the indices of top similar articles
-        similar_indices = sorted(range(len(similarities)), key=lambda i: similarities[i], reverse=True)[:num_suggestions]
+        similar_indices = sorted(range(len(similarities)), key=lambda i: similarities[i], reverse=True)[
+                          :num_suggestions]
 
         similar_articles = [all_articles[index] for index in similar_indices]
         return similar_articles
-
-
 
 
 class DeleteArticle(APIView):
