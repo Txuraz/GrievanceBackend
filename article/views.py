@@ -1,7 +1,7 @@
 import jwt
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
-from rest_framework.generics import get_object_or_404
+from rest_framework.generics import get_object_or_404, UpdateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
@@ -29,10 +29,14 @@ class CreateArticle(APIView):
 
         author_id = payload['id']
         author_name = get_user_model().objects.get(id=author_id).name
-        stay_anonymous = request.data.get('stay_anonymous')
+
+        # Check if 'stay_anonymous' is provided in the request
+        stay_anonymous = request.data.get('stay_anonymous', False)  # Default to False if not provided
 
         serializer = ArticleSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
+        # Set 'stay_anonymous' to False if not provided
         serializer.save(author_id=author_id, author_name=author_name, stay_anonymous=stay_anonymous)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -220,10 +224,10 @@ class ArticleStatusUpdate(APIView):
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed()
 
-        user = get_user_model().objects.filter(pk=payload['id']).first()
+        user = User.objects.filter(pk=payload['id']).first()
 
-        if not user or not user.is_admin:
-            raise PermissionDenied()
+        if not user:
+            raise AuthenticationFailed()
 
         try:
             article = Article.objects.get(pk=article_id)
@@ -236,6 +240,10 @@ class ArticleStatusUpdate(APIView):
         is_completed = serializer.validated_data['is_completed']
         article.is_completed = is_completed
         article.save()
+
+        # Update the user's completed_article_count field
+        user.completed_article_count = Article.objects.filter(author=user, is_completed=True).count()
+        user.save()
 
         return Response({'is_completed': is_completed}, status=status.HTTP_200_OK)
 
@@ -252,3 +260,47 @@ class ListArticles(APIView):
         all_articles = Article.objects.all()
         serializer = ArticleSerializer(all_articles, many=True)
         return Response(serializer.data)
+
+
+class EditArticle(UpdateAPIView):
+    queryset = Article.objects.all()
+    serializer_class = ArticleSerializer
+
+    def put(self, request, *args, **kwargs):
+        # Get the article ID from the URL parameters
+        article_id = kwargs.get('pk')
+
+        # Check if a valid JWT token is present in the request
+        token = request.COOKIES.get('jwt')
+        if not token:
+            raise AuthenticationFailed('Unauthenticated!')
+
+        try:
+            # Verify and decode the JWT token
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Unauthenticated!')
+
+        # Retrieve the user ID from the JWT payload
+        user_id = payload['id']
+
+        try:
+            # Get the article from the database
+            article = self.get_object()
+        except Article.DoesNotExist:
+            raise Http404
+
+        # Check if the user has permission to edit the article
+        if user_id != article.author.id:
+            raise PermissionDenied('You do not have permission to edit this article.')
+
+        # Exclude 'author_name' field from the request data to prevent it from being updated
+        request_data = request.data.copy()
+        request_data.pop('author_name', None)
+
+        serializer = self.get_serializer(article, data=request_data, partial=True)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
