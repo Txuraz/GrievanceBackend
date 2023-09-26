@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from .views import ListArticles, RetrieveArticle, CreateArticle, DeleteArticle, VoteArticle, SimilarArticles, \
-    ArticleStatusUpdate, CompletedArticleList, IncompleteArticles
+    ArticleStatusUpdate, CompletedArticleList, IncompleteArticles, EditArticle
 
 urlpatterns = [
     path('articles/', IncompleteArticles.as_view(), name='incomplete_articles'),
@@ -13,5 +13,6 @@ urlpatterns = [
     path('articles/<int:article_id>/status/', ArticleStatusUpdate.as_view(), name='update-article-status'),
     path('articles/completed-articles/', CompletedArticleList.as_view(), name='completed_articles'),
     path('articles/all/', ListArticles.as_view(), name='all_articles'),
+    path('articles/<int:pk>/edit/', EditArticle.as_view(), name='edit-article'),
 
 ]

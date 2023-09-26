@@ -10,6 +10,7 @@ class User(AbstractUser):
     password = models.CharField(max_length=255)
     is_admin = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False)
+    completed_article_count = models.PositiveIntegerField(default=0)
 
     username = None
 
