@@ -108,7 +108,8 @@ class SimilarArticles(APIView):
         return article
 
     def get_similar_articles(self, article, num_suggestions=4):
-        all_articles = Article.objects.exclude(id=article.id)
+        unfiltered_articles = Article.objects.exclude(id=article.id)
+        all_articles = [article for article in unfiltered_articles if not article.is_completed]
 
         # Combine the titles and contents of all articles
         all_text = [art.content for art in all_articles]
