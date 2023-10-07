@@ -18,38 +18,31 @@ Before you can run the app, make sure you have the following installed:
 
 1. Clone the repository to your local machine:
    ```
-      git clone https://github.com/yourusername/my-django-app.git
-   
+   git clone https://github.com/yourusername/my-django-app.git
    ```
 2. Navigate to the project directory:
     ```
     cd my-django-app
-    
     ```
 3. Create a virtual environment (optional but recommended):
    ```
    python -m venv venv
-   
    ```
 4. Activate the virtual environment:
     ```
     venv\Scripts\activate
-
     ```
 5. Install the project dependencies:
    ```
    pip install -r requirements.txt
-
    ```
 6. Apply database migrations:
    ```
    python manage.py migrate
-
    ```
 7. Start the development server:
    ```
    python manage.py runserver
-
    ```
 ## Usage
 Once the development server is running, you can access the Django app in your web browser at http://localhost:8000/.
