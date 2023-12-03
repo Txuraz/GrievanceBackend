@@ -72,7 +72,7 @@ class Login(APIView):
 
         payload = {
             'id': admin_id,  # Use the assigned ID for the default admin or the user's ID for regular users
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+            'exp': timezone.localtime(timezone.now()) + timezone.timedelta(minutes=60),
             'iat': datetime.datetime.utcnow(),
             'admin': is_admin
         }
@@ -82,7 +82,8 @@ class Login(APIView):
         response = Response()
         response.set_cookie(key='jwt', value=token, httponly=True)
         response.data = {
-            'jwt': token
+            'jwt': token,
+            'exp': timezone.localtime(timezone.now()) + timezone.timedelta(minutes=60)
         }
 
         return response
