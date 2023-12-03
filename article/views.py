@@ -213,40 +213,39 @@ class VoteArticle(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
+
 class ArticleStatusUpdate(APIView):
-    def patch(self, request, article_id):
+    def put(self, request, article_id):
         token = request.COOKIES.get('jwt')
 
         if not token:
-            raise AuthenticationFailed()
+            raise AuthenticationFailed('Unauthenticated!')
 
         try:
             payload = jwt.decode(token, 'secret', algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed()
+            raise AuthenticationFailed('Unauthenticated!')
 
-        user = User.objects.filter(pk=payload['id']).first()
+        user_id = payload.get('id')
+        user = User.objects.get(pk=user_id)
 
-        if not user:
-            raise AuthenticationFailed()
+        if not user.is_admin:
+            raise PermissionDenied('Only admin users can update the status of an article.')
 
         try:
             article = Article.objects.get(pk=article_id)
         except Article.DoesNotExist:
             raise Http404
 
-        serializer = ArticleStatusUpdateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        is_completed = request.data.get('is_completed', None)
+        if is_completed is not None:
+            article.is_completed = is_completed
+            article.is_status_updatable = True  # Allow status updates
+            article.save()
 
-        is_completed = serializer.validated_data['is_completed']
-        article.is_completed = is_completed
-        article.save()
+        serializer = ArticleSerializer(article)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-        # Update the user's completed_article_count field
-        user.completed_article_count = Article.objects.filter(author=user, is_completed=True).count()
-        user.save()
-
-        return Response({'is_completed': is_completed}, status=status.HTTP_200_OK)
 
 
 class CompletedArticleList(APIView):
