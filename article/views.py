@@ -240,7 +240,7 @@ class ArticleStatusUpdate(APIView):
         is_completed = request.data.get('is_completed', None)
         if is_completed is not None:
             article.is_completed = is_completed
-            article.is_status_updatable = True  # Allow status updates
+            article.is_status_updatable = True
             article.save()
 
         serializer = ArticleSerializer(article)
