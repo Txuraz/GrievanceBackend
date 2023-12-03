@@ -15,3 +15,13 @@ class Article(models.Model):
     downvoted_by = models.ManyToManyField(get_user_model(), related_name='downvoted_articles')
     is_completed = models.BooleanField(default=False)
     stay_anonymous = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        # If the article is completed, update the completed_article_count for the author
+        if self.is_completed:
+            self.author.completed_article_count = Article.objects.filter(
+                author=self.author, is_completed=True
+            ).count()
+            self.author.save()

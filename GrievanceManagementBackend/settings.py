@@ -80,8 +80,8 @@ WSGI_APPLICATION = 'GrievanceManagementBackend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'gms1',
-        'USER': 'root',
+        'NAME': 'gms',
+        'USER': 'txuraz',
         'PASSWORD': 'root',
         'HOST': 'localhost',
         'PORT': '3306',
