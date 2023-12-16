@@ -18,7 +18,7 @@ Before you can run the app, make sure you have the following installed:
 
 1. Clone the repository to your local machine:
    ```
-   git clone https://github.com/yourusername/my-django-app.git
+   git clone https://github.com/Txuraz/GrievanceBackend.git
    ```
 2. Navigate to the project directory:
     ```
@@ -44,10 +44,14 @@ Before you can run the app, make sure you have the following installed:
    ```
    python manage.py runserver
    ```
+##Note:
+If Mysql server is not working configure your database as you like in **Settings.py** file located in project main directory.
+
 ## Usage
 Once the development server is running, you can access the Django app in your web browser at http://localhost:8000/.
 
 ## Deployment
+
 
 
 ## Contributing
