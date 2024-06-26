@@ -36,13 +36,13 @@ Before you can run the app, make sure you have the following installed:
    ```
    pip install -r requirements.txt
    ```
-6. Apply database migrations:
-   ```
-   python manage.py migrate
-   ```
-7. copy .env.example to .env
+6. copy .env.example to .env
    ```
    cp .env.example .env
+   ```
+7. Apply database migrations:
+   ```
+   python manage.py migrate
    ```
 8. edit and add your database information and secret key in .env:
    ```
