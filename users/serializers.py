@@ -6,22 +6,14 @@ from django.contrib.auth.hashers import make_password
 class UserSerializers(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = '__all__'
+        fields = [
+            'id', 'username', 'email', 'password',
+            'is_admin', 'is_approved', 'completed_article_count'
+        ]
         extra_kwargs = {
-            'last_login': {'write_only': True},
-            'is_superuser': {'write_only': True},
-            'first_name': {'write_only': True},
-            'last_name': {'write_only': True},
-            'is_staff': {'write_only': True},
-            'is_active': {'write_only': True},
-            'date_joined': {'write_only': True},
-            'groups': {'write_only': True},
-            'password': {'write_only': True},
-            'user_permissions': {'write_only': True},
-
+            'password': {'write_only': True}
         }
 
-    # Password is Converted into Hash
     def create(self, validated_data):
         password = validated_data.pop('password', None)
         instance = self.Meta.model(**validated_data)

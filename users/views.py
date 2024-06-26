@@ -1,21 +1,17 @@
 import datetime
 import uuid
-
 import jwt
+from django.contrib.auth import get_user_model
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.html import strip_tags
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.core.mail import send_mail
-from django.conf import settings
 from .models import User, PasswordResetToken
 from .serializers import UserSerializers
-import random
-from django.contrib.auth import get_user_model
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
 
 
 class Register(APIView):
@@ -26,21 +22,16 @@ class Register(APIView):
         return Response(serializer.data)
 
 
-from django.contrib.auth import get_user_model
-
-
 class Login(APIView):
     def post(self, request):
         email = request.data['email']
         password = request.data['password']
 
         if email == 'admin@admin.com' and password == 'admin':
-            # Authentication successful for default admin
             is_admin = True
-            is_approved = True  # Set is_approved to True for default admin
-            admin_id = 1  # Assign a specific ID to the default admin
+            is_approved = True
+            admin_id = 1
         else:
-            # Get the custom user model
             User = get_user_model()
 
             user = User.objects.filter(email=email).first()
@@ -57,34 +48,25 @@ class Login(APIView):
             is_admin = False
             is_approved = True
 
-            admin_id = user.id  # Use the user's ID as the admin ID for regular users
+            admin_id = user.id
 
-        # Get the custom user model
         User = get_user_model()
 
         user = User.objects.filter(email=email).first()
 
         if user is None:
-            # Create the default admin user if it doesn't exist in the database
             user = User(id=admin_id, email=email, is_admin=is_admin, is_approved=is_approved)
             user.set_password(password)
             user.save()
 
-        payload = {
-            'id': admin_id,  # Use the assigned ID for the default admin or the user's ID for regular users
-            'exp': timezone.localtime(timezone.now()) + timezone.timedelta(minutes=60),
-            'iat': datetime.datetime.utcnow(),
-            'admin': is_admin
-        }
+        payload = {'id': admin_id, 'exp': timezone.localtime(timezone.now()) + timezone.timedelta(minutes=60),
+            'iat': datetime.datetime.utcnow(), 'admin': is_admin}
 
         token = jwt.encode(payload, 'secret', algorithm='HS256')
 
         response = Response()
         response.set_cookie(key='jwt', value=token, httponly=True)
-        response.data = {
-            'jwt': token,
-            'exp': timezone.localtime(timezone.now()) + timezone.timedelta(minutes=60)
-        }
+        response.data = {'jwt': token, 'exp': timezone.localtime(timezone.now()) + timezone.timedelta(minutes=60)}
 
         return response
 
@@ -111,9 +93,7 @@ class Logout(APIView):
     def post(self, request):
         response = Response()
         response.delete_cookie('jwt')
-        response.data = {
-            'message': 'Logout successful'
-        }
+        response.data = {'message': 'Logout successful'}
         return response
 
 
@@ -133,9 +113,6 @@ class AdminView(APIView):
 
         if not user or not user.is_admin:
             raise AuthenticationFailed('Unauthorized')
-
-        # Admin-specific logic goes here
-        # You can control other APIs or perform additional actions
 
         return Response({'message': 'Admin API'})
 
@@ -218,7 +195,6 @@ class DeleteUser(APIView):
             response = Response({'message': 'User deleted'})  # Initialize response here
 
             if user.id == user_id:
-                # Delete the token from the cookies
                 response.delete_cookie('jwt')
 
             user_to_delete.delete()
@@ -303,35 +279,26 @@ class ForgotPassword(APIView):
         email = request.data.get('email')
 
         try:
-            # Check if the user exists and is valid
             user = User.objects.get(email=email, is_active=True)
         except User.DoesNotExist:
-            # If the user does not exist or is not valid, return an error response
             raise AuthenticationFailed('Invalid email')
 
-        # Invalidate any existing password reset tokens for the user
         PasswordResetToken.objects.filter(user=user).delete()
 
-        # Set the expiration time for the verification code (e.g., 15 minutes from now)
         expiration_time = timezone.now() + timezone.timedelta(minutes=15)
 
-        # Generate a unique token for the password reset
         token = uuid.uuid4().hex
 
-        # Create a new password reset token object
         password_reset_token = PasswordResetToken.objects.create(user=user, token=token, expires_at=expiration_time)
 
-        # Create the email content
         subject = 'Password Reset Verification Code'
         html_content = render_to_string('password_reset_email.html', {'token': token, 'expires_at': expiration_time})
         text_content = strip_tags(html_content)
 
-        # Send the email
         email = EmailMultiAlternatives(subject, text_content, "no-reply.gms@outlook.com", [email])
         email.attach_alternative(html_content, "text/html")
         email.send()
 
-        # Return the API response
         return Response({'message': 'Verification code sent successfully!'})
 
 
@@ -341,34 +308,21 @@ class ResetPassword(APIView):
         email = request.data.get('email')
         new_password = request.data.get('new_password')
 
-        # Retrieve the password reset token
         try:
             password_reset_token = PasswordResetToken.objects.get(user__email=email, token=verification_code)
         except PasswordResetToken.DoesNotExist:
             raise AuthenticationFailed('Invalid verification code')
 
-        # Check if the token has expired
         now = timezone.localtime(timezone.now()).replace(tzinfo=None)
         expires_at = password_reset_token.expires_at.replace(tzinfo=None)  # Convert to naive datetime
         if expires_at < now:
             raise AuthenticationFailed('Expired verification code')
 
-        # Get the user associated with the token
         user = password_reset_token.user
 
-        # Update the user's password
         user.set_password(new_password)
         user.save()
 
-        # Delete the used token
         password_reset_token.delete()
 
         return Response({'message': 'Password reset successful'})
-
-
-
-
-
-
-
-
