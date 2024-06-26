@@ -1,16 +1,15 @@
 import jwt
+import spacy
+from django.contrib.auth import get_user_model
+from django.http import Http404
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from rest_framework.generics import get_object_or_404, UpdateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.http import Http404
-from django.contrib.auth import get_user_model
-from gensim.models import Word2Vec
-from .models import Article
-from .serializers import ArticleSerializer, ArticleStatusUpdateSerializer
 from users.models import User
-import spacy
+from .models import Article
+from .serializers import ArticleSerializer
 
 nlp = spacy.load('en_core_web_sm')
 
@@ -121,12 +120,7 @@ class SimilarArticles(APIView):
         all_docs = [nlp(text) for text in all_text]
         article_doc = nlp(article.content)
 
-        # Train a Word2Vec model on the preprocessed documents
         sentences = [[token.text for token in doc] for doc in all_docs]
-        model = Word2Vec(sentences, min_count=1, vector_size=300)
-
-        # Calculate similarity scores using Gensim's Word2Vec model
-        # similarities = [model.wv.n_similarity(article_doc, doc) for doc in sentences]
 
         # Calculate similarity scores using spaCy's similarity method
         similarities = [article_doc.similarity(doc) for doc in all_docs]
@@ -213,7 +207,6 @@ class VoteArticle(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-
 class ArticleStatusUpdate(APIView):
     def put(self, request, article_id):
         token = request.COOKIES.get('jwt')
@@ -247,7 +240,6 @@ class ArticleStatusUpdate(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-
 class CompletedArticleList(APIView):
     def get(self, request):
         completed_articles = Article.objects.filter(is_completed=True)
@@ -267,10 +259,6 @@ class EditArticle(UpdateAPIView):
     serializer_class = ArticleSerializer
 
     def put(self, request, *args, **kwargs):
-        # Get the article ID from the URL parameters
-        article_id = kwargs.get('pk')
-
-        # Check if a valid JWT token is present in the request
         token = request.COOKIES.get('jwt')
         if not token:
             raise AuthenticationFailed('Unauthenticated!')
@@ -281,7 +269,6 @@ class EditArticle(UpdateAPIView):
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('Unauthenticated!')
 
-        # Retrieve the user ID from the JWT payload
         user_id = payload['id']
 
         try:
@@ -290,11 +277,9 @@ class EditArticle(UpdateAPIView):
         except Article.DoesNotExist:
             raise Http404
 
-        # Check if the user has permission to edit the article
         if user_id != article.author.id:
             raise PermissionDenied('You do not have permission to edit this article.')
 
-        # Exclude 'author_name' field from the request data to prevent it from being updated
         request_data = request.data.copy()
         request_data.pop('author_name', None)
 
