@@ -11,21 +11,18 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
 from pathlib import Path
-
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-omafgj*@f+0lkj*ly4ocnu!l7mhg@amg=4ilv!8(^r-0w)_qj7'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['*']
+SECRET_KEY = os.getenv('SECRET_KEY')
+DEBUG = os.getenv('DEBUG') == 'True'  # Convert string 'True'/'False' to boolean
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
 # Application definition
 
@@ -54,6 +51,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+#REST_FRAMEWORK = {
+#    'DEFAULT_RENDERER_CLASSES': (
+#        'rest_framework.renderers.JSONRenderer',
+#    )
+#}
+
+
 ROOT_URLCONF = 'GrievanceManagementBackend.urls'
 
 TEMPLATES = [
@@ -80,12 +84,11 @@ WSGI_APPLICATION = 'GrievanceManagementBackend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'gms',
-        'USER': 'txuraz',
-        'PASSWORD': 'root',
-        'HOST': 'localhost',
-        'PORT': '3306',
-
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 
@@ -122,6 +125,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(Path(__file__).resolve().parent.parent, "static/")
+
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -135,12 +140,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = "gunaso.noreply@gmail.com"
-EMAIL_HOST_PASSWORD = "xuinajapwksrksbq"
-MAIL_FROM_ADDRESS = "gunaso.noreply@gmail.com"
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+MAIL_FROM_ADDRESS = os.getenv('MAIL_FROM_ADDRESS')
 
 
 
