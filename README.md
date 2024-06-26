@@ -22,7 +22,7 @@ Before you can run the app, make sure you have the following installed:
    ```
 2. Navigate to the project directory:
     ```
-    cd my-django-app
+    cd GrievanceBackend
     ```
 3. Create a virtual environment (optional but recommended):
    ```
@@ -40,7 +40,30 @@ Before you can run the app, make sure you have the following installed:
    ```
    python manage.py migrate
    ```
-7. Start the development server:
+7. copy .env.example to .env
+   ```
+   cp .env.example .env
+   ```
+8. edit and add your database information and secret key in .env:
+   ```
+   SECRET_KEY=your-actual-secret-key
+   DEBUG=True
+   ALLOWED_HOSTS=localhost,127.0.0.1
+
+   DB_NAME=txu
+   DB_USER=txuraz
+   DB_PASSWORD=actual-password
+   DB_HOST=localhost
+   DB_PORT=3306
+
+   EMAIL_HOST=smtp.gmail.com
+   EMAIL_PORT=587
+   EMAIL_USE_TLS=True
+   EMAIL_HOST_USER=your-actual-email@gmail.com
+   EMAIL_HOST_PASSWORD=your-actual-email-password
+   MAIL_FROM_ADDRESS=your-actual-email@gmail.com
+   ```
+9. Start the development server:
    ```
    python manage.py runserver
    ```
@@ -50,15 +73,4 @@ If Mysql server is not working configure your database as you like in **Settings
 ## Usage
 Once the development server is running, you can access the Django app in your web browser at http://localhost:8000/.
 
-## Deployment
-
-
-
-## Contributing
-Please read CONTRIBUTING.md for details on our code of conduct, and the process for submitting pull requests to us.
-
-## License
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-   
 
