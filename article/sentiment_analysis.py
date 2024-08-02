@@ -71,7 +71,3 @@ def analyze_sentiment(text):
     final_sentiment = max(sentiment_votes, key=sentiment_votes.get)
 
     return final_sentiment
-
-# Example usage
-text = "The app has been updated recently. Some users have noted minor improvements, while others haven't seen any significant changes. It's unclear how these updates will affect overall performance in the long run."
-print(analyze_sentiment(text))
