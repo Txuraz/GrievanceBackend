@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from users.models import User
 from .models import Article
 from .serializers import ArticleSerializer
+from .sentiment_analysis import analyze_sentiment
 
 nlp = spacy.load('en_core_web_sm')
 
@@ -29,14 +30,14 @@ class CreateArticle(APIView):
         author_id = payload['id']
         author_name = get_user_model().objects.get(id=author_id).name
 
-        # Check if 'stay_anonymous' is provided in the request
         stay_anonymous = request.data.get('stay_anonymous', False)  # Default to False if not provided
 
         serializer = ArticleSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # Set 'stay_anonymous' to False if not provided
-        serializer.save(author_id=author_id, author_name=author_name, stay_anonymous=stay_anonymous)
+        article = serializer.save(author_id=author_id, author_name=author_name, stay_anonymous=stay_anonymous)
+        article.sentiment = analyze_sentiment(article.content)
+        article.save()
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -44,15 +45,7 @@ class CreateArticle(APIView):
 class IncompleteArticles(APIView):
     def get(self, request):
         all_articles = Article.objects.all()
-        pending_articles = []
-        completed_articles = []
-
-        for article in all_articles:
-            if article.is_completed:
-                completed_articles.append(article)
-            else:
-                pending_articles.append(article)
-
+        pending_articles = [article for article in all_articles if not article.is_completed]
         sorted_pending_articles = self.merge_sort(pending_articles)
         serializer = ArticleSerializer(sorted_pending_articles, many=True)
         return Response(serializer.data)
@@ -110,24 +103,13 @@ class SimilarArticles(APIView):
         unfiltered_articles = Article.objects.exclude(id=article.id)
         all_articles = [article for article in unfiltered_articles if not article.is_completed]
 
-        # Combine the titles and contents of all articles
         all_text = [art.content for art in all_articles]
-
-        # Load spaCy's English model for tokenization
-        nlp = spacy.load('en_core_web_sm')
-
-        # Tokenize and preprocess the text
         all_docs = [nlp(text) for text in all_text]
         article_doc = nlp(article.content)
 
         sentences = [[token.text for token in doc] for doc in all_docs]
-
-        # Calculate similarity scores using spaCy's similarity method
         similarities = [article_doc.similarity(doc) for doc in all_docs]
-
-        # Get the indices of top similar articles
-        similar_indices = sorted(range(len(similarities)), key=lambda i: similarities[i], reverse=True)[
-                          :num_suggestions]
+        similar_indices = sorted(range(len(similarities)), key=lambda i: similarities[i], reverse=True)[:num_suggestions]
 
         similar_articles = [all_articles[index] for index in similar_indices]
         return similar_articles
@@ -233,7 +215,6 @@ class ArticleStatusUpdate(APIView):
         is_completed = request.data.get('is_completed', None)
         if is_completed is not None:
             article.is_completed = is_completed
-            article.is_status_updatable = True
             article.save()
 
         serializer = ArticleSerializer(article)
@@ -264,7 +245,6 @@ class EditArticle(UpdateAPIView):
             raise AuthenticationFailed('Unauthenticated!')
 
         try:
-            # Verify and decode the JWT token
             payload = jwt.decode(token, 'secret', algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('Unauthenticated!')
@@ -272,7 +252,6 @@ class EditArticle(UpdateAPIView):
         user_id = payload['id']
 
         try:
-            # Get the article from the database
             article = self.get_object()
         except Article.DoesNotExist:
             raise Http404
@@ -284,7 +263,6 @@ class EditArticle(UpdateAPIView):
         request_data.pop('author_name', None)
 
         serializer = self.get_serializer(article, data=request_data, partial=True)
-
         serializer.is_valid(raise_exception=True)
         serializer.save()
 

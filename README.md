@@ -40,11 +40,7 @@ Before you can run the app, make sure you have the following installed:
    ```
    cp .env.example .env
    ```
-7. Apply database migrations:
-   ```
-   python manage.py migrate
-   ```
-8. edit and add your database information and secret key in .env:
+   edit and add your database information and secret key in .env:
    ```
    SECRET_KEY=your-actual-secret-key
    DEBUG=True
@@ -62,6 +58,15 @@ Before you can run the app, make sure you have the following installed:
    EMAIL_HOST_USER=your-actual-email@gmail.com
    EMAIL_HOST_PASSWORD=your-actual-email-password
    MAIL_FROM_ADDRESS=your-actual-email@gmail.com
+   ```
+7. Apply database migrations:
+   ```
+   python manage.py migrate
+   ```
+8. seed Grievances and user
+   ```
+   python manage.py user_seeder
+   python manage.py grievance_seeder
    ```
 9. Start the development server:
    ```
