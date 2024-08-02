@@ -58,7 +58,7 @@ Once the development server is running, you can access the Django app in your we
 Please read CONTRIBUTING.md for details on our code of conduct, and the process for submitting pull requests to us.
 
 ## License
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the LICENSE file for details..
 
    
 
