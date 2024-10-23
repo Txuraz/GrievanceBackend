@@ -9,16 +9,17 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         nepali_names = ["Ram", "Hari", "Om", "Shyam", "Sita", "Gita", "Bina", "Maya", "Amit", "Raj", "Sanjay", "Dipak", "Kiran", "Ravi", "Nisha", "Anita", "Sunil", "Puja", "Rita", "Manoj"]
 
-        users = [
-            {
-                "name": random.choice(nepali_names),
-                "email": f"{random.choice(nepali_names).lower()}@example.com",
+        users = []
+        for _ in range(20):
+            name = random.choice(nepali_names)
+            user = {
+                "name": name,
+                "email": f"{name.lower()}@example.com",
                 "password": "password123",
                 "is_admin": random.choice([True, False]),
                 "is_approved": random.choice([True, False])
             }
-            for _ in range(20)
-        ]
+            users.append(user)
 
         for user_data in users:
             user, created = User.objects.update_or_create(
