@@ -23,3 +23,5 @@ Thumbs.db
 .coverage
 .tox/
 .eggs/
+
+article/sentiment_model.pkl
