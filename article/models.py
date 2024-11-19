@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.conf import settings
-from .sentiment_analysis import analyze_sentiment
+#from .sentiment_analysis import analyze_sentiment
+from .sentiment_analysis_vader_transformer import analyze_sentiment
 
 class Article(models.Model):
     title = models.CharField(max_length=100)

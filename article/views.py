@@ -10,7 +10,8 @@ from rest_framework.views import APIView
 from users.models import User
 from .models import Article
 from .serializers import ArticleSerializer
-from .sentiment_analysis import analyze_sentiment
+#from .sentiment_analysis import analyze_sentiment
+from .sentiment_analysis_vader_transformer import analyze_sentiment
 
 nlp = spacy.load('en_core_web_sm')
 

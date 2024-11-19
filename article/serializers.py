@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Article
-from .sentiment_analysis import analyze_sentiment
+#from .sentiment_analysis import analyze_sentiment
+from .sentiment_analysis_vader_transformer import analyze_sentiment
 
 class ArticleSerializer(serializers.ModelSerializer):
     sentiment = serializers.SerializerMethodField()
