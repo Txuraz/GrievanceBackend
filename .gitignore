@@ -25,3 +25,5 @@ Thumbs.db
 .eggs/
 
 article/sentiment_model.pkl
+*.pkl
+*.csv
