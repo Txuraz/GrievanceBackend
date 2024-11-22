@@ -32,29 +32,6 @@ def analyze_sentiment_transformer(text):
     else:
         return 'neutral'
 
-def map_sentiment_to_emotions(sentiment):
-    emotion_map = {
-        'positive': [
-            'Acceptance', 'Affection', 'Amusement', 'Euphoria', 'Excitement', 'Empowerment',
-            'Joy', 'Love', 'Optimism', 'Pride', 'Gratitude', 'Hope', 'Contentment',
-            'Trust', 'Curiosity', 'Cheerfulness'
-        ],
-        'negative': [
-            'Sadness', 'Grief', 'Fear', 'Anger', 'Frustration', 'Disgust', 'Anxiety',
-            'Guilt', 'Shame', 'Embarrassment', 'Boredom', 'Helplessness', 'Regret'
-        ],
-        'neutral': [
-            'Indifference', 'Calmness', 'Serenity', 'Confusion', 'Nostalgia', 'Surprise', 'Uncertainty'
-        ],
-        'mixed': [
-            'Bittersweet', 'Ambivalence', 'Mixed Feelings', 'Satisfaction', 'Resentment'
-        ]
-    }
-    if sentiment in emotion_map:
-        return emotion_map[sentiment]
-    else:
-        return []
-
 def analyze_sentiment(text):
     available_memory = psutil.virtual_memory().available
     if available_memory < 100 * 1024 * 1024:
@@ -88,14 +65,4 @@ def analyze_sentiment(text):
     if sentiment_votes['positive'] == sentiment_votes['negative'] and sentiment_votes['neutral'] == 0:
         final_sentiment = 'neutral'
 
-    # Map the final sentiment to emotion categories
-    emotion_categories = map_sentiment_to_emotions(final_sentiment)
-
-    return final_sentiment, emotion_categories
-
-# Example usage
-text = "I received the product, but there was nothing particularly outstanding about the experience. It was just okay."
-final_sentiment, emotion_categories = analyze_sentiment(text)
-
-print(f"Final Sentiment: {final_sentiment}")
-print(f"Emotion Categories: {emotion_categories}")
+    return final_sentiment
